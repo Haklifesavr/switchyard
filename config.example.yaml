@@ -1,0 +1,64 @@
+# Switchyard example config. Runs as-is with mock providers (no API keys needed):
+#   go run ./cmd/switchyard -config config.example.yaml
+# Demo client key: sy_demo_key_change_me  (create your own with: switchyard gen-key)
+
+listen: ":8080"
+
+providers:
+  # Real providers: uncomment and export OPENAI_API_KEY / ANTHROPIC_API_KEY.
+  # openai:
+  #   type: openai
+  #   api_key: ${OPENAI_API_KEY}
+  #   timeout: 60s
+  # anthropic:
+  #   type: anthropic
+  #   api_key: ${ANTHROPIC_API_KEY}
+  #   timeout: 60s
+  # local:                        # any OpenAI-compatible server (Ollama, vLLM, LM Studio...)
+  #   type: openai
+  #   base_url: http://localhost:11434/v1
+  #   api_key: ollama
+
+  primary:
+    type: mock
+    latency: 150ms
+    failure_rate: 0.3       # fails 30% of the time, to show retries and fallback
+  backup:
+    type: mock
+    latency: 300ms
+
+models:
+  # Clients ask for "smart"; Switchyard tries each target in order.
+  - name: smart
+    targets:
+      - { provider: primary, model: mock-large }
+      - { provider: backup,  model: mock-large-backup }
+      # - { provider: openai,    model: gpt-4o }
+      # - { provider: anthropic, model: claude-sonnet-5-5 }
+  - name: fast
+    targets:
+      - { provider: backup, model: mock-small }
+
+auth:
+  keys:
+    - name: demo
+      sha256: ea9d3d46c8598da5b70a01bc2d803a817d4e89149f60d20cde96b87daca39aa4
+      requests_per_minute: 120
+      tokens_per_day: 500000
+
+cache:
+  enabled: true
+  ttl: 10m
+  max_entries: 1000
+
+retry:
+  attempts: 2
+  backoff: 200ms
+
+breaker:
+  failure_threshold: 5
+  cooldown: 30s
+
+log:
+  level: info
+  format: text
