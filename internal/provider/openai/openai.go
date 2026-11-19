@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -92,7 +93,7 @@ func (p *Provider) Stream(ctx context.Context, req *api.ChatRequest) (provider.S
 	r := req.Clone()
 	r.Stream = true
 	r.StreamOptions = &api.StreamOptions{IncludeUsage: true}
-	resp, err := p.do(ctx, r)
+	resp, err := p.do(ctx, r) //nolint:bodyclose // the stream owns the body and closes it in Close
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func (s *stream) Recv() (*api.ChatChunk, error) {
 	for {
 		ev, err := s.r.Next()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil, io.EOF
 			}
 			return nil, provider.FromTransport(s.name, err)

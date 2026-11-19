@@ -311,7 +311,7 @@ func decodeRequest(w http.ResponseWriter, r *http.Request) (*api.ChatRequest, er
 		if errors.As(err, &tooBig) {
 			return nil, fmt.Errorf("request body exceeds %d bytes", maxBodyBytes)
 		}
-		return nil, fmt.Errorf("invalid JSON: %v", err)
+		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}
 	if req.Model == "" {
 		return nil, errors.New("model is required")
@@ -399,8 +399,8 @@ func (s *Server) withRecover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
-				if v == http.ErrAbortHandler {
-					panic(v)
+				if err, ok := v.(error); ok && errors.Is(err, http.ErrAbortHandler) {
+					panic(v) // let net/http abort the connection as intended
 				}
 				s.log.Error("panic serving request", "request_id", requestID(r.Context()), "panic", v)
 				writeError(w, http.StatusInternalServerError, "server_error", "internal_error", "internal error")

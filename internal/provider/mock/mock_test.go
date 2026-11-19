@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -37,7 +38,7 @@ func TestStreamReassemblesToSameText(t *testing.T) {
 	var last *api.ChatChunk
 	for {
 		c, err := s.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

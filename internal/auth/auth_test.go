@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func TestAuthenticate(t *testing.T) {
 			r.Header.Set("Authorization", c.header)
 		}
 		k, err := a.Authenticate(r)
-		if err != c.want {
+		if !errors.Is(err, c.want) {
 			t.Errorf("%q: err = %v, want %v", c.header, err, c.want)
 		}
 		if c.want == nil && (k == nil || k.Name != "web" || k.RequestsPerMinute != 10) {

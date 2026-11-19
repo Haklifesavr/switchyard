@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -204,7 +205,7 @@ func (p *Provider) Complete(ctx context.Context, req *api.ChatRequest) (*api.Cha
 func (p *Provider) Stream(ctx context.Context, req *api.ChatRequest) (provider.Stream, error) {
 	body := toAnthropic(req)
 	body.Stream = true
-	resp, err := p.do(ctx, body)
+	resp, err := p.do(ctx, body) //nolint:bodyclose // the stream owns the body and closes it in Close
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +259,7 @@ func (s *stream) chunk(delta api.Delta, finish *string) *api.ChatChunk {
 func (s *stream) Recv() (*api.ChatChunk, error) {
 	for !s.done {
 		ev, err := s.r.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil, io.EOF
 		}
 		if err != nil {

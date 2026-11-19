@@ -1,6 +1,7 @@
 package sse
 
 import (
+	"errors"
 	"io"
 	"net/http/httptest"
 	"strings"
@@ -20,7 +21,7 @@ func TestReaderParsesEvents(t *testing.T) {
 			t.Errorf("event %d = %+v, want %+v", i, got, w)
 		}
 	}
-	if _, err := r.Next(); err != io.EOF {
+	if _, err := r.Next(); !errors.Is(err, io.EOF) {
 		t.Fatalf("want io.EOF, got %v", err)
 	}
 }

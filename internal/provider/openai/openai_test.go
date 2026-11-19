@@ -99,7 +99,7 @@ func TestStreamParsesChunksAndUsage(t *testing.T) {
 	var usage *api.Usage
 	for {
 		c, err := s.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
