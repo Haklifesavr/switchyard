@@ -5,10 +5,12 @@
 **A fast, self-hosted LLM gateway written in Go.** Point any OpenAI-compatible client at Switchyard, and it routes each request to OpenAI, Anthropic or a local model, falling back to another provider when one fails, while enforcing per-key rate limits and token budgets.
 
 ```
-your app ──► Switchyard ──► OpenAI
- (OpenAI SDK)     │    └──► Anthropic   (translated to the Messages API, streaming included)
-                  │    └──► Ollama / vLLM / any OpenAI-compatible server
-                  └── retries · fallback · circuit breakers · rate limits · budgets · cache · metrics
+your app ──► Switchyard ──┬──► OpenAI
+(OpenAI SDK)     │        ├──► Anthropic  (Messages API, streaming included)
+                 │        └──► Ollama, vLLM, any OpenAI-compatible server
+                 │
+                 └─ retries · fallback · circuit breakers
+                    rate limits · token budgets · cache · metrics
 ```
 
 ## Why
